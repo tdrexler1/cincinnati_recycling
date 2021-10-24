@@ -1,0 +1,41 @@
+// QUESTION 1:
+// Which neighborhoods have average monthly recycling program participation rates in the bottom 10 percent of all neighborhoods? Consider residential addresses only.
+
+// import dataset
+val CIN_tipData = spark.read.format("csv").option("header", true).option("inferSchema", true).load("/user/maria_dev/final/part3/CIN_Recycle_Carts_Tip_Data.csv")
+    .withColumn("month", month( to_date($"DATE", "MM/dd/yyy") ) )
+    .withColumn("year", year( to_date($"DATE", "MM/dd/yyy") ) )
+
+import org.apache.spark.sql.expressions._                                                                       // needed for window function
+val windowRank = Window.orderBy( "avgNeighborhoodMPR" )                                                         // ranking window definition
+
+val bottom10pctNeigh = CIN_tipData
+    .filter($"OESCLASSIFICATION" === "RESIDENTIAL" && $"ADDRESSID".isNotNull && $"NEIGHBORHOOD".isNotNull)      // filter by question criteria and remove invalid data
+    .groupBy($"ADDRESSID", $"year", $"month", $"NEIGHBORHOOD")                                                  // group data by address and month
+    .agg( sum( $"CARTLIFTS").alias("addMonthTips") )                                                            // aggregate sum of cart tips per month for each address
+    .withColumn("addMonthPart", when($"addMonthTips" >= 1, 1).otherwise(0) )                                    // determine monthly participation status for each address
+    .withColumn("addRecord", lit(1) )                                                                           // marker to track count of address records
+    .groupBy($"NEIGHBORHOOD", $"year", $"month")                                                                // group addresses by neighborhood and month
+    .agg( ( sum($"addMonthPart") / sum($"addRecord") ).alias("neighMonthPartRate") )                            // aggregate total participants divided by total addresses
+    .groupBy($"NEIGHBORHOOD")                                                                                   // group addresses by neighborhood
+    .agg( avg($"neighMonthPartRate").alias("avgNeighborhoodMPR") )                                              // aggregate average monthly participation rates
+    .withColumn("rank", percent_rank.over(windowRank) )                                                         // rank average monthly participation rates
+    .filter($"rank" <= 0.1)                                                                                     // filter to bottom 10% of neighborhood rates
+    
+bottom10pctNeigh
+    .show(false)                                                                                                // display results
+
+##################################################################################
+
+import org.apache.spark.sql.expressions._
+windowRank: org.apache.spark.sql.expressions.WindowSpec = org.apache.spark.sql.expressions.WindowSpec@34a261c8
+bottom10pctNeigh: org.apache.spark.sql.Dataset[org.apache.spark.sql.Row] = [NEIGHBORHOOD: string, avgNeighborhoodMPR: double ... 1 more field]
++---------------------+-------------------+--------------------+
+|NEIGHBORHOOD         |avgNeighborhoodMPR |rank                |
++---------------------+-------------------+--------------------+
+|ENGLISH WOODS        |0.05657894736842104|0.0                 |
+|WINTON HILLS         |0.0835981531258129 |0.020833333333333332|
+|VILLAGES AT ROLL HILL|0.15105042016806725|0.041666666666666664|
+|SOUTH FAIRMOUNT      |0.18403062580694163|0.0625              |
+|MILLVALE             |0.1872814270402695 |0.08333333333333333 |
++---------------------+-------------------+--------------------+ 
