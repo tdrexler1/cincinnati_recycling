@@ -6,8 +6,12 @@ This was a class project for "Big Data: High-Performance Computing."
 
 ## Overview
 
+The goal of this project was to select a large dataset and use it to develop and answer a set of questions. I wrote the query scripts using Scala and ran them against the data set using Spark. I accessed Spark using Apache Zeppelin, a component of the Hortonworks Sandbox running on an Amazon Elastic Computing (EC2) instance. 
+
 ## Data Sources
-The primary data set I used was [“Recycle Carts Collection ‘Tip’ Data”](https://data.cincinnati-oh.gov/Thriving-Neighborhoods/Recycle-Carts-Collection-Tip-Data/3kem-bs7v) available from the [City of Cincinnati Open Data Portal](https://data.cincinnati-oh.gov/).
+The primary dataset I used was [“Recycle Carts Collection ‘Tip’ Data”](https://data.cincinnati-oh.gov/Thriving-Neighborhoods/Recycle-Carts-Collection-Tip-Data/3kem-bs7v) available from the [City of Cincinnati Open Data Portal](https://data.cincinnati-oh.gov/). This dataset tracks the number of times every recycling cart in the city is picked up by a recycling truck, based on an RFID tag identifier attached to each cart. 
+
+The full recycling dataset contains over 5.8 million rows of records. To help develop my Scala query scripts, I first wrote a [short Java program](CIN_data_sample.java) to randomly sample a subset of data. A copy of [one such sample](CIN_Recycle_Carts_Tip_Data_sample_5.0.csv.zip) is included in the project repository.
 
 For Question 4, I also collected data from the [US Census Bureau](https://data.census.gov/). The data I used came from detailed tables of the 2018 American Community Survey 5-year estimates.  The table numbers and titles were:
 
@@ -19,9 +23,11 @@ I downloaded data at the census block group level to match the block groups in e
 
 ## Research Questions and Results
 
+What follows is a list of the questions I wrote, including the query results and reasoning behind each question. I've included copies of the query scripts as text files in the project repository.  
+
 Questions 1 & 2 examine the rate of participation in the Cincinnati recycling program, first by neighborhood (Question 1) and then by city block (Question 2).  According to the data set description, “the Cartlift field indicates how many time (sic) the recycling cart was ‘tipped’ in a given month.”  I chose to define recycling program “participants” as an address with at least one cart tip recorded in a month. Dividing the number of participating addresses by the total number of addresses in the neighborhood or city block produced monthly participation rates.  This does not account for rates of participation within a single address, such as multi-unit buildings or single-unit buildings associated with multiple bin RFID numbers.
 
-### Question 1
+### [Question 1](CIN_recycling_question1.txt)
 
 Which neighborhoods have average monthly recycling program participation rates in the bottom 10 percent of all neighborhoods? Consider residential addresses only.
 
@@ -39,7 +45,7 @@ Which neighborhoods have average monthly recycling program participation rates i
 
 The neighborhoods with the lowest average monthly participation rates might benefit from targeted outreach designed to increase program participation.  Though this question is limited in scope, the full set of results including all neighborhoods also gives an overview of how participation rates vary throughout the city. 
 
-### Question 2
+### [Question 2](CIN_recycling_question2.txt)
 
 What are the top 10 city blocks measured by average monthly recycling program participation rates?  For the purposes of this question, a city block is defined as addresses on the same street having numbers within the same “hundreds” place, i.e., 301, 359, 378, would be in one block, 4502, 4523, 4567, would be in a different block.  Consider residential addresses only and exclude any block with fewer than 10 addresses.
 
@@ -62,7 +68,7 @@ What are the top 10 city blocks measured by average monthly recycling program pa
 
 As in question 1, the results included here are filtered from a larger result set which might have other uses.  For example, instead of comparing participation rates of blocks city-wide, they could be compared to other blocks on the same street or in the same neighborhood. This information could be used in a positive way to encourage neighbors to determine which block can achieve the highest average monthly participation rate, leveraging civic pride to increase overall participation in the recycling program.
 
-### Question 3
+### [Question 3](CIN_recycling_question3.txt)
 
 List recycling truck routes with a monthly average of cart tips greater than one standard deviation above the monthly average of cart tips calculated for all routes.  Include residential and commercial addresses.  Exclude routes labelled “UP” (which appear to be low-volume, supplemental routes).  
 
@@ -87,7 +93,7 @@ Standard deviation of individual route monthly average cart tips: 314.3280659183
 
 The results of this question should identify recycling truck routes with the heaviest pick-up volume, which could be useful in further analysis of route efficiency, the expected need for supplemental routes, and the possibility of route splitting. This depends on the extent to which the number of cart tips corresponds to the volume of materials.  For example, the carts in the data set vary in capacity and it is likely the volume of material within each cart varies from week to week.  However, it seems reasonable to assume that the two measurements are somewhat correlated and tip counts could be used as rough proxy measure of pick-up volume. 
 
-### Question 4
+### [Question 4](CIN_recycling_question4.txt)
 
 At the neighborhood level, determine whether there is evidence of a relationship between participation in the recycling program and each of the demographic characteristics of educational attainment, household annual income, and incidence of poverty.  Consider residential addresses only.
 
